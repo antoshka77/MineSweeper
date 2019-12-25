@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_item_easy"
+        android:title="@string/easy" />
+
+    <item
+        android:id="@+id/menu_item_medium"
+        android:title="@string/medium" />
+
+    <item
+        android:id="@+id/menu_item_hard"
+        android:title="@string/hard" />
+
+</menu>
