@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             setSelection(1)
 
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onItemSelected(parent: AdapterView<*>, view: View, pos: Int, id: Long) {
+                override fun onItemSelected(parent: AdapterView<*>, view: View?, pos: Int, id: Long) {
                     mode = when (pos) {
                         0 -> GameMode.EASY
                         1 -> GameMode.MEDIUM
