@@ -11,20 +11,24 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.appcompat.app.AlertDialog
+import edu.minesweeper.MainActivity.Companion.actionBarHeight
+import edu.minesweeper.MainActivity.Companion.screenSize
 import edu.minesweeper.game.*
 import java.util.*
 
 
 class GameView : View {
 
-    private lateinit var game: Game
-    private lateinit var mode: GameMode
-    private lateinit var player: String
+    lateinit var game: Game
+    lateinit var mode: GameMode
+    lateinit var player: String
     private var paint = Paint()
 
     private var lastActionTime = 0L
-    private val columnsMargin = MainActivity.screenSize.x % IMAGE_SIZE / 2
-    private val rowsMargin = MainActivity.screenSize.y % IMAGE_SIZE / 2
+    private val columnsMargin =
+        (ifRotated(screenSize.x, screenSize.y).toInt() % IMAGE_SIZE + actionBarHeight!!) / 2
+    private val rowsMargin =
+        ifRotated(screenSize.y, screenSize.x).toInt() % IMAGE_SIZE / 2
     private val parentActivity = parentActivity()
 
     constructor(context: Context) : super(context)
@@ -46,8 +50,8 @@ class GameView : View {
             game.getBox(coord).image?.apply {
                 canvas!!.drawBitmap(
                     this as Bitmap,
-                    columnsMargin + coord.x.toFloat() * IMAGE_SIZE,
-                    rowsMargin + coord.y.toFloat() * IMAGE_SIZE,
+                    columnsMargin + (ifRotated(coord.x, coord.y).toFloat()) * IMAGE_SIZE,
+                    rowsMargin + (ifRotated(coord.y, coord.x).toFloat()) * IMAGE_SIZE,
                     paint
                 )
             }
@@ -58,8 +62,8 @@ class GameView : View {
     override fun onTouchEvent(event: MotionEvent?): Boolean {
         event ?: return false
 
-        val x = (event.x - columnsMargin) / IMAGE_SIZE
-        val y = (event.y - rowsMargin) / IMAGE_SIZE
+        val x = (ifRotated(event.x, event.y).toFloat() - columnsMargin) / IMAGE_SIZE
+        val y = (ifRotated(event.y, event.x).toFloat() - rowsMargin) / IMAGE_SIZE
 
         val coord = Coord(x.toInt(), y.toInt())
         if (!Ranges.inRange(coord)) return false
@@ -105,11 +109,10 @@ class GameView : View {
         return super.performClick()
     }
 
-    fun restartGame(mode: GameMode, player: String) {
-        game = Game().apply { start() }
+    fun restartGame(game: Game, mode: GameMode, player: String) {
+        this.game = game
         this.mode = mode
         this.player = player
-        parentActivity.startTimer()
     }
 
     private fun showRestartDialog(text: String, duration: Long) {
@@ -118,7 +121,8 @@ class GameView : View {
             setTitle(R.string.game_over)
 
             setPositiveButton(R.string.retry) { dialog, id ->
-                restartGame(mode, player)
+                restartGame(Game().apply { start() }, mode, player)
+                parentActivity.startTimer()
                 invalidate()
             }
             setNegativeButton(R.string.to_menu) { dialog, id ->
@@ -152,4 +156,7 @@ class GameView : View {
 
         return parent as GameActivity
     }
+
+    private fun ifRotated(a: Number, b: Number): Number =
+        if (resources.configuration.orientation == MainActivity.orientation) a else b
 }

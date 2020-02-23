@@ -13,11 +13,12 @@ import edu.minesweeper.game.Coord
 import edu.minesweeper.game.Ranges
 import android.util.TypedValue
 
-
 class MainActivity : AppCompatActivity() {
 
     companion object {
         lateinit var screenSize: Point
+        var actionBarHeight: Int? = null
+        var orientation: Int? = null
     }
 
     private lateinit var player: String
@@ -27,12 +28,17 @@ class MainActivity : AppCompatActivity() {
         screenSize = Point().apply { windowManager.defaultDisplay.getRealSize(this) }
 
         val typedValue = TypedValue()
-        val actionBarHeight =
+        actionBarHeight =
             if (theme.resolveAttribute(android.R.attr.actionBarSize, typedValue, true))
                 TypedValue.complexToDimensionPixelSize(typedValue.data, resources.displayMetrics)
             else
                 0
-        screenSize.y -= actionBarHeight
+        screenSize.apply {
+            x -= actionBarHeight!!
+            y -= actionBarHeight!!
+        }
+
+        orientation = resources.configuration.orientation
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

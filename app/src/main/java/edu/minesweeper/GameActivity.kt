@@ -1,10 +1,11 @@
 package edu.minesweeper
 
-import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProviders
+import edu.minesweeper.game.Game
 import java.util.*
 import kotlin.concurrent.fixedRateTimer
 
@@ -24,6 +25,7 @@ class GameActivity : AppCompatActivity() {
     private lateinit var timer: Timer
     private var paused = false
     var duration = 0L
+    private lateinit var mViewModel: GameViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,12 +39,24 @@ class GameActivity : AppCompatActivity() {
             }
         }
 
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContentView(R.layout.activity_game)
 
-        val mode = GameMode.valueOf(intent.getStringExtra(StringConstants.MODE)!!)
-        val player = intent.getStringExtra(StringConstants.PLAYER)!!
-        findViewById<GameView>(R.id.game_view).restartGame(mode, player)
+        mViewModel = ViewModelProviders.of(this).get(GameViewModel::class.java)
+        val gameView = findViewById<GameView>(R.id.game_view)
+
+        if (mViewModel.game == null) {
+            val game = Game().apply { start() }
+            val mode = GameMode.valueOf(intent.getStringExtra(StringConstants.MODE)!!)
+            val player = intent.getStringExtra(StringConstants.PLAYER)!!
+
+            gameView.restartGame(game, mode, player)
+            startTimer()
+        }
+        else {
+            gameView.restartGame(mViewModel.game!!, mViewModel.mode!!, mViewModel.player!!)
+            duration = mViewModel.duration!!
+            resumeTimer()
+        }
     }
 
     override fun onResume() {
@@ -59,6 +73,17 @@ class GameActivity : AppCompatActivity() {
 
         paused = true
         stopTimer()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        val gameView = findViewById<GameView>(R.id.game_view)
+        mViewModel.also {
+            it.game = gameView.game
+            it.mode = gameView.mode
+            it.player = gameView.player
+            it.duration = duration
+        }
     }
 
     fun startTimer() {
